@@ -10,7 +10,7 @@ bool started = false;
 int tick = 0;
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 800), "A* App Window");
+    sf::RenderWindow window(sf::VideoMode({800,600}), "A* App Window");
     window.setFramerateLimit(60);
 
     grid_cell grid[HOR_CELLS][VERT_CELLS];
@@ -26,14 +26,14 @@ int main() {
     }
 
     sf::Font indicator_font;
-    if (!indicator_font.loadFromFile("OpenSans-Regular.ttf")) exit (0);
-    sf::Text indicator_text;
+    if (!indicator_font.openFromFile("OpenSans-Regular.ttf")) exit (0);
+    sf::Text indicator_text(indicator_font, "", 24);
     indicator_text.setFont(indicator_font);
     indicator_text.setPosition(sf::Vector2f(100.f, 650.f));
     indicator_text.setFillColor(sf::Color::White);
     indicator_text.setCharacterSize(24);
 
-    sf::Text space_to_start;
+    sf::Text space_to_start(indicator_font, "", 24);
     space_to_start.setFont(indicator_font);
     space_to_start.setPosition(sf::Vector2f(260.f, 580.f));
     space_to_start.setString("Press Spacebar to Start");
@@ -41,10 +41,16 @@ int main() {
 
     while(window.isOpen())
     {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+        while (const std::optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+            {
                 window.close();
+            }
+            else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+                    window.close();
             }
         }
 
@@ -60,10 +66,11 @@ int main() {
             window.draw(space_to_start);
         }
 
+        bool done = false;
         if (started) {
-            run(grid);
+            if (run(grid)) started = false;;
             //grid[rand() % HOR_CELLS][rand() % VERT_CELLS].sf_RectP.setFillColor(sf::Color::Red);
-        } else if (source_node != nullptr && target_node != nullptr && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && !started) {
+        } else if (source_node != nullptr && target_node != nullptr && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && !started && !done) {
             started = true;
             setup(HOR_CELLS, VERT_CELLS, target_node);
             add_source(source_node);
@@ -78,7 +85,7 @@ int main() {
             sprintf(cell_string, "Cell: %d, %d\nG: %d, H: %d", x_cell, y_cell, grid[x_cell][y_cell].g_cost, grid[x_cell][y_cell].h_cost);
             indicator_text.setString(cell_string);
 
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                 if (source_node == nullptr) {
                     grid[x_cell][y_cell].type = source;
                     source_node = &grid[x_cell][y_cell];

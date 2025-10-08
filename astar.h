@@ -35,6 +35,7 @@ typedef struct grid_cell {
 
 void setup(int in_x_size, int in_y_size, grid_cell *in_target_node);
 void add_source(grid_cell *source_node);
-grid_cell* run(grid_cell in_grid[HOR_CELLS][VERT_CELLS]);
+void close_node(grid_cell *node);
+bool run(grid_cell in_grid[HOR_CELLS][VERT_CELLS]);
 
 #endif //ASTARPROJECT_ASTAR_H
